@@ -74,7 +74,7 @@ tput sgr0
 service mineos start
 
 #Creating Default Mineos User
-echo -e "${green}This is your new user and Default Webui user"
+echo -e "${green}This is creating your new user (picraft) and Default Webui user, Don't forget this password as you will need it for the WebUi."
 useradd picraft
 passwd picraft
 
