@@ -17,6 +17,9 @@ while true;do
  esac
 done
 
+#Setting time.
+ntpdate ntp.ubuntu.com
+
 #Install dependencies
 echo -e "${yellow}Updating and getting prerequisites"
 tput sgr0
@@ -91,6 +94,16 @@ while true; do
 done
 rm /usr/local/src/noip-duc-linux.tar.gz
 
+#Ask about killing lightdm.
+echo -e "${yellow}"
+while true; do
+    read -p "Would you like to kill lightdm Upstart (auto load desktop)? (yes or no)" yn
+    case $yn in
+	 [Yy]* ) tput sgr0; echo "manual" > /etc/init/lightdm.override; echo "Yes"; break;;
+	 [Nn]* ) echo "No"; break;;
+	 * ) echo "Please answer yes or no.";;
+ esac
+done
 echo -e "${yellow}Cleaning up.."
 sleep 2
 echo -e "${green}ALL DONE, THANK THE DEV'S FOR THEIR TIME AND ENERGY!."
