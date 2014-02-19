@@ -17,9 +17,6 @@ while true;do
  esac
 done
 
-#Setting time.
-ntpdate ntp.ubuntu.com
-
 #Install dependencies
 echo -e "${yellow}Updating and getting prerequisites"
 tput sgr0
