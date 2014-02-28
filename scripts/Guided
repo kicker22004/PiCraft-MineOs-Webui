@@ -1,0 +1,119 @@
+#!/bin/bash
+
+yellow='\e[1;33m'
+green='\e[1;32m'
+red='\e[0;31m'
+white='\e[1;37m'
+
+
+echo -e "${green} Welcome to the Guided script!"
+sleep 2
+echo "This will take you step by step and ask you for info along the way."
+sleep 1
+echo "This will take about 10 minutes to complete (depending on your ISP)."
+sleep 3
+
+#Install dependencies
+echo -e "${yellow}Updating and getting prerequisites"
+tput sgr0
+apt-get update
+apt-get -y install tar screen python-cherrypy3 rdiff-backup
+
+echo -e "${yellow}Downloading/Installing Optimized Java, Please Wait..."
+tput sgr0
+wget --no-check-certificate http://www.java.net/download/jdk8/archive/b121/binaries/jdk-8-ea-b121-linux-arm-vfp-hflt-19_dec_2013.tar.gz
+tar zxvf jdk* -C /opt
+rm jdk-8-ea-b121-linux-arm-vfp-hflt-19_dec_2013.tar.gz
+update-alternatives --install "/usr/bin/java" "java" "/opt/jdk1.8.0/bin/java" 1
+update-alternatives --install "/usr/bin/javac" "javac" "/opt/jdk1.8.0/bin/javac" 1
+update-alternatives --set java /opt/jdk1.8.0/bin/java
+update-alternatives --set javac /opt/jdk1.8.0/bin/javac
+. /etc/profile
+
+echo -e "${yellow}Install MineOS scripts and service"
+tput sgr0
+mkdir -p /usr/games
+cd /usr/games
+git clone --depth 1 https://github.com/hexparrot/mineos minecraft
+cd minecraft
+git config core.filemode false
+chmod +x server.py mineos_console.py generate-sslcert.sh
+cp /usr/games/minecraft/init/mineos /etc/init.d/
+chmod 755 /etc/init.d/mineos
+update-rc.d mineos defaults
+
+echo -e "${yellow}Start MineOs on boot"
+tput sgr0
+cp /usr/games/minecraft/init/minecraft /etc/init.d/
+chmod 744 /etc/init.d/minecraft
+update-rc.d mineos defaults
+
+#Copy the default mineos.conf
+cp /usr/games/minecraft/mineos.conf /etc/
+
+# Make SSL Cert
+echo -e "${yellow}Generate SSL cert for web UI of MineOS"
+tput sgr0
+cd /usr/games/minecraft
+./generate-sslcert.sh
+
+#Start Mineos service
+echo -e "${yellow}Starting the MineOS service"
+tput sgr0
+service mineos start
+
+#Creating Default Mineos User
+echo -e "${green}This is creating your new user (Boxcraft) and Default Webui user, Don't forget this password as you will need it for the WebUi."
+useradd boxcraft
+passwd boxcraft
+
+#Ask about noip2.
+echo -e "${yellow}"
+cd /usr/local/src
+while true; do
+    read -p "Would you like to Install noip2? (yes or no)" yn
+    case $yn in
+	 [Yy]* ) tput sgr0; wget http://www.no-ip.com/client/linux/noip-duc-linux.tar.gz; tar xf noip-duc-linux.tar.gz; cd noip-2.1.9-1/; make install; echo "Yes"; break;;
+	 [Nn]* ) echo "No"; rm /usr/local/src/noip-duc-linux.tar.gz; break;;
+	 * ) echo "Please answer yes or no.";;
+ esac
+done
+
+#Ask about killing lightdm.
+echo -e "${yellow}"
+while true; do
+    read -p "Would you like to kill lightdm & x11-common Upstart (auto load desktop)? (yes or no)" yn
+    case $yn in
+	 [Yy]* ) tput sgr0; echo "manual" > /etc/init/lightdm.override; echo "manual" > /etc/init/x11-common.override; echo "Yes"; break;;
+	 [Nn]* ) echo "No"; break;;
+	 * ) echo "Please answer yes or no.";;
+ esac
+done
+
+#Ask about removing x11-common.
+echo -e "${yellow}"
+while true; do
+    read -p "Would like to completely remove x11-common (removes desktop gui)? (yes or no)" yn
+    case $yn in
+	 [Yy]* ) tput sgr0; apt-get remove --purge x11-common; echo "Yes"; break;;
+	 [Nn]* ) echo "No"; break;;
+	 * ) echo "Please answer yes or no.";;
+ esac
+done
+echo -e "${yellow}Cleaning up.."
+sleep 2
+echo -e "${green}ALL DONE, THANK THE DEV'S FOR THEIR TIME AND ENERGY!."
+sleep 2
+# Ask about reboot.
+while true; do
+    read -p "Would you like a fresh reboot. Reboot now? (yes or no)" yn
+    case $yn in
+         [Yy]* ) echo "Rebooting System in 5 seconds"; echo "Enjoy Your New Cubox-i4pro Server with an amazing WebUI!."; tput sgr0; sleep 5; reboot; exit;;
+         [Nn]* ) echo "No"; break;;
+         * ) echo "Please answer yes or no.";;
+ esac
+done
+echo -e "${white}Enjoy Your New Cubox-i4pro Server with an amazing WebUI!."
+cd $HOME rm -rf temp
+sleep 5
+exit 0
