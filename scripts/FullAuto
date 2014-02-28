@@ -10,7 +10,7 @@ log='logger.txt'
 #Caution
 echo -e "${red}"
 while true;do
-    read -p "This will install without your input after noip. Continue? (yes or no)" yn
+    read -p "This will install without your input (after noip). Continue? (yes or no)" yn
     case $yn in
 	 [Yy]* ) echo "Starting Script"; break;;
 	 [Nn]* ) echo "Please Rerun script.";tput sgr0; exit;;
