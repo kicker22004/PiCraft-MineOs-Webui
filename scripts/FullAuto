@@ -108,6 +108,8 @@ echo -e "${green} 75%"
 echo -e "${green} 80%"
 
 echo -e "${green} 90%"
+#Change to Noop
+sed -i 's/deadline/noop/g' /boot/cmdline.txt
 
 echo -e "${yellow}Cleaning up.."
 sleep 2
