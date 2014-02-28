@@ -31,8 +31,8 @@ echo "2.Automatic Installer"
 #Display install Options
 echo -e "${yellow}"
 while true;do
-    read -p "Please select your install method: " abc
-    case $abc in
+    read -p "Please select your install method: "
+    case $12 in
          [1] ) "${Guided}"; tput sgr0; break;;
          [2] ) "${Automatic}"; tput sgr0; break;;
          [EeQq]* ) echo "Thank You For Trying this out!!"; tput sgr0; exit;;
