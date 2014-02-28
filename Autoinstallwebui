@@ -21,7 +21,8 @@ done
 echo -e "${yellow}Updating and getting prerequisites"
 tput sgr0
 apt-get update
-apt-get -y install screen python-cherrypy3 rdiff-backup git libc6-i386 openjdk-7-jre-headless
+apt-get -y install screen python-cherrypy3 rdiff-backup git openjdk-7-jre-headless
+echo "punches self in face!!"
 
 echo -e "${yellow}Downloading/Installing Optimized Java, Please Wait..."
 tput sgr0
