@@ -101,13 +101,10 @@ service mineos start
 echo -e "${green} Adding user (picraft) and password (12345)"
 echo -e "${green} 70%"
 {
- useradd boxcraft
- echo "boxcraft:12345" | chpasswd
+ useradd picraft
+ echo "picraft:12345" | chpasswd
 } &> "${log}"
 echo -e "${green} 75%"
-#Removing x11-common
-echo -e "${yellow} Removing x11-common"
-apt-get remove --purge x11-common -y &> "${log}"
 echo -e "${green} 80%"
 
 echo -e "${green} 90%"
