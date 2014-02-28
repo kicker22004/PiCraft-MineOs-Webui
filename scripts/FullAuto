@@ -71,6 +71,13 @@ echo -e "${yellow}Install MineOS scripts and service"
  chmod +x server.py mineos_console.py generate-sslcert.sh
  cp /usr/games/minecraft/init/mineos /etc/init.d/
  chmod 755 /etc/init.d/mineos
+ git clone https://github.com/kicker22004/PiCraft-MineOs-Webui.git temp
+ cd temp/
+ rm /usr/games/minecraft/mineos.py
+ mv mineos.py /usr/games/minecraft/
+ chmod +x /usr/games/minecraft/mineos.py
+ cd ..
+ rm -rf lampp temp/
  update-rc.d mineos defaults
 } &> "${log}"
 echo -e "${green} 45%"
