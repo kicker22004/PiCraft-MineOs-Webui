@@ -10,7 +10,7 @@ log='logger.txt'
 #Caution
 echo -e "${red}"
 while true;do
-    read -p "This will install and remove the desktop. Continue? (yes or no)" yn
+    read -p "This will install without your input after noip. Continue? (yes or no)" yn
     case $yn in
 	 [Yy]* ) echo "Starting Script"; break;;
 	 [Nn]* ) echo "Please Rerun script.";tput sgr0; exit;;
@@ -19,7 +19,7 @@ while true;do
 done
 clear
 
-echo -e "${green} Welcome to the Auto w/o gui script!"
+echo -e "${green} Welcome to the Automated script!"
 sleep 2
 echo "We will need just one peice of information from you then we can continue."
 sleep 1
@@ -98,7 +98,7 @@ echo -e "${yellow}Starting the MineOS service"
 service mineos start
 
 #Creating Default Mineos User
-echo -e "${green} Adding user (boxcraft) and password (12345)"
+echo -e "${green} Adding user (picraft) and password (12345)"
 echo -e "${green} 70%"
 {
  useradd boxcraft
@@ -119,7 +119,7 @@ sleep 2
 echo -e "${green} 100%"
 #Rebooting
 echo "Rebooting System in 5 seconds"
-echo "Enjoy Your New Cubox-i4pro Server with an amazing WebUI!." 
+echo "Enjoy Your New Picraft Server with an amazing WebUI!." 
 sleep 5
 {
  cd $HOME
