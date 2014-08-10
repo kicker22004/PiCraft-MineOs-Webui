@@ -1,0 +1,37 @@
+#!/bin/bash
+
+green='\e[1;32m'
+
+echo "============================================================"
+echo "=                                                          ="
+echo "=       Welcome                                            ="
+echo "=             To                                           ="
+echo "=                The                                       ="
+echo "=                     Update                               ="
+echo "=                            Script                        ="
+echo "=                                                          ="
+echo "=                                                          ="
+echo "============================================================"
+sleep 5
+echo -e "${green} Updating Mineos WebUi"
+cd /usr/games/minecraft
+git fetch
+git merge origin/master
+
+echo -e "${green} Resetting Scripts"
+git fetch
+git reset --hard origin/master
+
+echo -e${green} Applying Modified Mineos.py"
+cd /home/pi/temp/
+rm /usr/games/minecraft/mineos.py
+mv mineos.py /usr/games/minecraft/
+chmod +x /usr/games/minecraft/mineos.py
+
+echo "Restarting MineOs"
+service mineos restart
+
+echo -e "${green} Just to make sure, rebooting"
+echo -e "${green} Once back up you should be ok"
+sleep 10
+exit
