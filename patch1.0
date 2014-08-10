@@ -22,7 +22,7 @@ echo -e "${green} Resetting Scripts"
 git fetch
 git reset --hard origin/master
 
-echo -e${green} Applying Modified Mineos.py"
+echo -e "${green} Applying Modified Mineos.py"
 cd /home/pi/temp/
 rm /usr/games/minecraft/mineos.py
 mv mineos.py /usr/games/minecraft/
@@ -34,4 +34,5 @@ service mineos restart
 echo -e "${green} Just to make sure, rebooting"
 echo -e "${green} Once back up you should be ok"
 sleep 10
+reboot
 exit 0
