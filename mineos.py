@@ -72,7 +72,6 @@ def server_up(up):
 class mc(object):
 
     NICE_VALUE = 10
-    COMMIT_DELAY = 10
     DEFAULT_PATHS = {
         'servers': 'servers',
         'backup': 'backup',
@@ -266,8 +265,9 @@ class mc(object):
                 'profile': '',
                 },
             'crontabs': {
-                'archive_interval': 0,
-                'backup_interval': 0,
+                'archive_interval': '',
+                'backup_interval': '',
+                'restart_interval': '',
                 },
             'onreboot': {
                 'restore': False,
@@ -277,11 +277,15 @@ class mc(object):
                 'java_tweaks': '',
                 'java_xmx': 256,
                 'java_xms': 256,
+                'java_debug': False
                 }
             }
 
         sanitize_integers = set([('java', 'java_xmx'),
                                  ('java', 'java_xms'),
+                                 ('crontabs', 'archive_interval'),
+                                 ('crontabs', 'backup_interval'),
+                                 ('crontabs', 'restart_interval')
                                  ])
 
         d = defaults.copy()
@@ -363,13 +367,24 @@ class mc(object):
         self._command_stuff('save-all')
 
     @server_exists(True)
+    @server_up(True)
+    def stop(self):
+        """Stop a server"""
+        if self.server_type == 'bungee':
+            self._command_stuff('end')
+        else:
+            self._command_stuff('stop')
+
+    @server_exists(True)
     def archive(self):
         """Creates a timestamped, gzipped tarball of the server contents."""
         self._make_directory(self.env['awd'])
         if self.up:
             self._command_stuff('save-off')
-            self._command_direct(self.command_archive, self.env['cwd'])
-            self._command_stuff('save-on')
+            try:
+                self._command_direct(self.command_archive, self.env['cwd'])
+            finally:
+                self._command_stuff('save-on')
         else:
             self._command_direct(self.command_archive, self.env['cwd'])
 
@@ -441,6 +456,8 @@ class mc(object):
 
             from shutil import rmtree
             rmtree(prefixed_dir)
+            
+        os.chmod(self.env['cwd'], 0775)
         
         self._load_config(generate_missing=True)
 
@@ -458,6 +475,15 @@ class mc(object):
     def delete_server(self):
         """Deletes server files from system"""
         self._command_direct(self.command_delete_server, self.env['pwd'])
+
+    @server_exists(True)
+    def accept_eula(self):
+        """Changes eula=False to eula=True in eula.txt, a 1.7.10 mojang additional measure"""
+
+        with open(os.path.join(self.env['cwd'], 'eula.txt'), 'w') as eula:
+            eula.write('#By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).')
+            eula.write('\neula=true')
+            eula.write('\n')
 
     def remove_profile(self, profile):
         """Removes a profile found in profile.config at the base_directory root"""
@@ -605,12 +631,13 @@ class mc(object):
                                       r'META-INF/maven/org.spigotmc/spigot/pom.xml',
                                       r'META-INF/maven/net.md-5/bungeecord-api/pom.xml']:
                     if internal_path in files:
-                        try:
-                            xml = parseString(zf.read(internal_path))
-                            return xml.getElementsByTagName('version')[0].firstChild.nodeValue
-                        except (IndexError, KeyError, AttributeError):
-                            continue 
-        except IOError:
+                        for tag in ['minecraft.version', 'version']:
+                            try:
+                                xml = parseString(zf.read(internal_path))
+                                return xml.getElementsByTagName(tag)[0].firstChild.nodeValue
+                            except (IndexError, KeyError, AttributeError):
+                                continue 
+        except (IOError, zipfile.BadZipfile):
             return ''
         else:
             import re
@@ -779,9 +806,9 @@ class mc(object):
         
         try:
             current = self.profile
-            if current == 'unmanaged':
-                path_ = os.path.join(self.env['cwd'], self.profile_config[self.profile:'run_as'])
-                if not os.path.isfile(path):
+            if self.profile_config[current:'type'] == 'unmanaged':
+                path_ = os.path.join(self.env['cwd'], self.profile_config[current:'run_as'])
+                if not os.path.isfile(path_):
                     raise RuntimeError('%s does not exist' % path_)
                 else:
                     return True
@@ -875,28 +902,35 @@ class mc(object):
                                           'players_online',
                                           'max_players'])
 
+        error_ping = server_ping(None,None,self.server_properties['motd'::''],
+                                 '-1',self.server_properties['max-players'])
+
         if self.server_type == 'bungee':
             return server_ping(None,None,'','0',1)
         elif self.up:
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(2.5)
                 s.connect((self.ip_address, self.port))
                 s.send(server_list_packet())
 
                 d = s.recv(1024)
                 s.shutdown(socket.SHUT_RDWR)
-            except socket.error:
-                return server_ping(None,None,self.server_properties['motd'::''],
-                                   '-1',self.server_properties['max-players'])
+            except (socket.error, socket.timeout):
+                return error_ping
             finally:
                 s.close()
 
-            assert d[0] == '\xff'
-            d = d[3:].decode('utf-16be')
-            assert d[:3] == u'\xa7\x31\x00'
-            segments = d[3:].split('\x00')
-
-            return server_ping(*segments)
+            if d[0] == '\xff':
+                d = d[3:].decode('utf-16be')
+                if d[:3] == u'\xa7\x31\x00': #modern protocol [u'127', u'1.7.4', u'A Minecraft Server', u'0', u'20']
+                    segments = d[3:].split('\x00')
+                    return server_ping(*segments)
+                else: #1.2-era protocol [u'A Minecraft Server', u'0', u'20']
+                    segments = d.split(u'\xa7')
+                    return server_ping(None,self.server_milestone_long,*segments)
+                    
+            return error_ping
         else:
             if self.server_name in self.list_servers(self.base):
                 return server_ping(None,None,self.server_properties['motd'::''],
@@ -928,6 +962,17 @@ class mc(object):
                                    self.profile_config[self.profile:'url']) or 'unknown'
 
     @property
+    def server_milestone_long(self):
+        """Returns best guessed server major, minor versions, release"""
+        import re
+
+        try:
+            version = re.match(r'(\d)\.(\d)\.(\d)', self.server_milestone)
+            return '%s.%s.%s' % (version.group(1), version.group(2), version.group(3))
+        except (AttributeError, TypeError):
+            return '0.0.0'
+
+    @property
     def server_milestone_short(self):
         """Returns short version of server_milestone major/minor"""
         import re
@@ -946,6 +991,15 @@ class mc(object):
             '(%s) -' % self.server_milestone_short,
             self.server_milestone,
             ])
+            
+    @property
+    def eula(self):
+        """Returns state of eula.txt Eula property"""
+        try:
+            cf = config_file(os.path.join(self.env['cwd'], 'eula.txt'))
+            return cf['eula']
+        except (SyntaxError, KeyError):
+            return None
 
 # shell command constructor properties
 
@@ -972,27 +1026,41 @@ class mc(object):
             'java_xmx': self.server_config['java':'java_xmx'],
             'java_xms': self.server_config['java':'java_xmx'],
             'java_tweaks': self.server_config['java':'java_tweaks':''],
+            'java_debug': '',
             'jar_args': 'nogui'
             }
+
+        from ConfigParser import NoOptionError
 
         try:
             jar_file = self.valid_filename(self.profile_config[self.profile:'run_as'])
             required_arguments['jar_file'] = os.path.join(self.env['cwd'], jar_file)
             required_arguments['jar_args'] = self.profile_config[self.profile:'jar_args':'']
-        except (TypeError,ValueError):
+        except (TypeError, ValueError):
             required_arguments['jar_file'] = None
             required_arguments['jar_args'] = None
 
         try:
-            java_xms = self.server_config['java':'java_xms'].strip()
-            assert 0 < int(java_xms) <= int(required_arguments['java_xmx'])
-            required_arguments['java_xms'] = java_xms   
-        except (KeyError,AttributeError,ValueError,AssertionError):
+            java_xms = self.server_config.getint('java','java_xms')
+            if 0 < java_xms <= int(required_arguments['java_xmx']):
+                required_arguments['java_xms'] = java_xms   
+        except (NoOptionError, ValueError):
+            pass
+
+        try:
+            if self.server_config.getboolean('java','java_debug'):
+                required_arguments['java_debug'] = ' '.join([
+                    '-verbose:gc',
+                    '-XX:+PrintGCTimeStamps',
+                    '-XX:+PrintGCDetails',
+                    '-Xloggc:{0}'.format(os.path.join(self.env['cwd'], 'java_gc.log'))
+                    ])
+        except (NoOptionError, ValueError):
             pass
 
         self._previous_arguments = required_arguments
         return '%(screen)s -dmS %(screen_name)s ' \
-               '%(java)s -Xmx%(java_xmx)sM -Xms%(java_xms)sM %(java_tweaks)s ' \
+               '%(java)s %(java_debug)s -Xmx%(java_xmx)sM -Xms%(java_xms)sM %(java_tweaks)s ' \
                '-jar %(jar_file)s %(jar_args)s' % required_arguments
 
     @property
@@ -1346,12 +1414,7 @@ class mc(object):
         hits = []
         msm = cls.minutes_since_midnight()
 
-        if action == 'archive':
-            section_option = ('crontabs', 'archive_interval')
-        elif action == 'backup':
-            section_option = ('crontabs', 'backup_interval')
-        else:
-            raise NotImplementedError("Requested action is not yet implemented.")
+        section_option = ('crontabs', '%s_interval' % action)
 
         for i in cls.list_servers(base_directory):
             try:
@@ -1360,8 +1423,8 @@ class mc(object):
                 instance = cls(i, owner_, base_directory)
             
                 interval = instance.server_config.getint(section_option[0],section_option[1])
-                '''at midnight, always archive. this works because
-                if archive_interval is not type(int), e.g., 'skip' or '',
+                '''msm == 0; at midnight, always trigger. this works because
+                if *_interval is not type(int), e.g., 'skip' or '',
                 it'll except ValueError, skipping the test altogether'''
                 if msm == 0:
                     hits.append(i)
