@@ -34,4 +34,4 @@ service mineos restart
 echo -e "${green} Just to make sure, rebooting"
 echo -e "${green} Once back up you should be ok"
 sleep 10
-exit
+exit 0
