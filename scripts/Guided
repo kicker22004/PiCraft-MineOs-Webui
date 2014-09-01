@@ -5,7 +5,28 @@ green='\e[1;32m'
 red='\e[0;31m'
 white='\e[1;37m'
 
+#Check for Root!
+FILE="/tmp/out.$$"
+GREP="/bin/grep"
+#....
+# Make sure only root can run our script
+if [ "$(id -u)" != "0" ]; then
+   echo "This script must be run as root, use Sudo ./Autoinstallwebui"; tput sgr0 1>&2
+   exit 1
+fi
+# ...
+#Caution
+echo -e "${red}"
+while true;do
+    read -p "This is the guided script, Is this what you wanted?, Continue? (yes or no)" yn
+    case $yn in
+	 [Yy]* ) echo "Starting Script"; break;;
+	 [Nn]* ) echo "Restarting script 1 second."; sleep 3; clear; cd .. && ./Autoinstallwebui; tput sgr0; exit;;
+	 * ) echo "Please answer yes or no."; exit;;
+ esac
+done
 clear
+
 echo -e "${green} Welcome to the Guided script!"
 sleep 2
 echo "This will take you step by step and ask you for info along the way."
