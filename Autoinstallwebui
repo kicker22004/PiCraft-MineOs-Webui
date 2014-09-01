@@ -14,15 +14,15 @@ echo -e "${green}"
 echo "Welcome to Raspberry Pi Webui installer."
 
 #Demand Root.
-echo -e "${red}"
-while true;do
-    read -p "ARE YOU RUNNING THIS AS ROOT? NOT SUDO BUT "ROOT"(yes or no)" yn
-    case $yn in
-	 [Yy]* ) echo "Starting Script"; break;;
-	 [Nn]* ) echo "THIS MUST RUN AS ROOT!";tput sgr0; exit;;
-	 * ) echo "Please answer yes or no."; exit;;
- esac
-done
+FILE="/tmp/out.$$"
+GREP="/bin/grep"
+#....
+# Make sure only root can run our script
+if [ "$(id -u)" != "0" ]; then
+   echo "This script must be run as root, use Sudo ./Autoinstallwebui"; tput sgr0 1>&2
+   exit 1
+fi
+# ...
 clear
 echo -e "${green}"
 echo "1.Guided Install"
@@ -31,10 +31,10 @@ echo "2.Automatic Installer"
 #Display install Options
 echo -e "${yellow}"
 while true;do
-    read -p "Please select your install method: " abe
+    read -p "Please select your install method Exit to quit: " abe
     case $abe in
-         [1] ) "${Guided}"; tput sgr0; break;;
-         [2] ) "${Automatic}"; tput sgr0; break;;
+         [1] ) clear; "${Guided}"; tput sgr0; break;;
+         [2] ) clear; "${Automatic}"; tput sgr0; break;;
          [EeQq]* ) echo "Thank You For Trying this out!!"; tput sgr0; exit;;
          * ) echo -e "${red}"; echo "Please Select one of the options or Exit to quit"; echo -e "${yellow}";;
  esac
