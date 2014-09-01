@@ -6,6 +6,16 @@ red='\e[0;31m'
 white='\e[1;37m'
 log='logger.txt'
 
+#Check for Root!
+FILE="/tmp/out.$$"
+GREP="/bin/grep"
+#....
+# Make sure only root can run our script
+if [ "$(id -u)" != "0" ]; then
+   echo "This script must be run as root, use Sudo ./Autoinstallwebui"; tput sgr0 1>&2
+   exit 1
+fi
+# ...
 
 #Caution
 echo -e "${red}"
@@ -13,7 +23,7 @@ while true;do
     read -p "This will install without your input (after noip). Continue? (yes or no)" yn
     case $yn in
 	 [Yy]* ) echo "Starting Script"; break;;
-	 [Nn]* ) echo "Please Rerun script.";tput sgr0; exit;;
+	 [Nn]* ) echo "Restarting script 1 second."; sleep 3; clear; cd .. && ./Autoinstallwebui; tput sgr0; exit;;
 	 * ) echo "Please answer yes or no."; exit;;
  esac
 done
