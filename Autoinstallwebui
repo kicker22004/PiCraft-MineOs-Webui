@@ -8,7 +8,7 @@ white='\e[1;37m'
 Guided='./Guided'
 Automatic='./FullAuto'
 
-cd $HOME/temp/scripts
+cd scripts
 chmod +x *
 echo -e "${green}"
 echo "Welcome to Raspberry Pi Webui installer."
