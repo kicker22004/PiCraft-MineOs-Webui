@@ -29,18 +29,6 @@ while true;do
 done
 clear
 
-#Caution
-echo -e "${red}"
-while true;do
-    read -p "This will install without your input (after noip). Continue? (yes or no)" yn
-    case $yn in
-	 [Yy]* ) echo "Starting Script"; break;;
-	 [Nn]* ) echo "Restarting script 1 second."; sleep 3; clear; cd .. && ./Autoinstallwebui; tput sgr0; exit;;
-	 * ) echo "Please answer yes or no."; exit;;
- esac
-done
-clear
-
 echo -e "${green} Welcome to the Automated script!"
 sleep 2
 echo "We will need just one peice of information from you then we can continue."
