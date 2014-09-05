@@ -42,11 +42,12 @@ cd /usr/local/src
 while true; do
     read -p "Would you like to Install noip2? (yes or no)" yn
     case $yn in
-	 [Yy]* ) tput sgr0; wget http://www.no-ip.com/client/linux/noip-duc-linux.tar.gz; tar xf noip-duc-linux.tar.gz; cd noip-2.1.9-1/; make install; echo "Yes"; rm /usr/local/src/noip-duc-linux.tar.gz; echo -e "${green} The rest will be Automatic so sit back and enjoy!"; break;;
-	 [Nn]* ) echo "No"; rm /usr/local/src/noip-duc-linux.tar.gz; echo -e "${green} The rest will be Automatic so sit back and enjoy!"; break;;
+	 [Yy]* ) tput sgr0; wget http://www.no-ip.com/client/linux/noip-duc-linux.tar.gz; tar xf noip-duc-linux.tar.gz; cd noip-2.1.9-1/; make install; echo "Yes";echo -e "${green} The rest will be Automatic so sit back and enjoy!"; break;;
+	 [Nn]* ) echo "No"; echo -e "${green} The rest will be Automatic so sit back and enjoy!"; break;;
 	 * ) echo "Please answer yes or no.";;
  esac
 done
+rm /usr/local/src/noip-duc-linux.tar.gz &> "${log}"
 
 #Install dependencies
 echo -e "${yellow}Updating and getting prerequisites"
